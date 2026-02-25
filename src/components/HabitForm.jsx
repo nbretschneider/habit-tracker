@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import './HabitForm.css'
+import { ICON_CATEGORIES } from '../data/icons'
 
 export default function HabitForm({ initialValues, habitCount, onSave, onCancel }) {
   const isEditing = !!initialValues
   const [name, setName] = useState(initialValues?.name ?? '')
   const [type, setType] = useState(initialValues?.type ?? 'checkbox')
   const [target, setTarget] = useState(initialValues?.target ?? 5)
+  const [icon, setIcon] = useState(initialValues?.icon ?? '')
   const [errors, setErrors] = useState({})
 
   function validate() {
@@ -26,14 +28,21 @@ export default function HabitForm({ initialValues, habitCount, onSave, onCancel 
       setErrors(errs)
       return
     }
-    onSave({ name, type, target: Number(target) })
+    onSave({ name, type, target: Number(target), icon })
+  }
+
+  function handleIconClick(emoji) {
+    setIcon(prev => prev === emoji ? '' : emoji)
   }
 
   return (
     <form className="habit-form" onSubmit={handleSubmit} noValidate>
 
       <div className={`form-field${errors.name ? ' form-field-error' : ''}`}>
-        <label htmlFor="habit-name">Habit name</label>
+        <label htmlFor="habit-name">
+          Habit name
+          {icon && <span className="form-icon-preview">{icon}</span>}
+        </label>
         <input
           id="habit-name"
           type="text"
@@ -88,6 +97,31 @@ export default function HabitForm({ initialValues, habitCount, onSave, onCancel 
           {errors.target && <span className="form-error-msg">{errors.target}</span>}
         </div>
       )}
+
+      <div className="form-field">
+        <label>Icon <span className="form-label-optional">(optional)</span></label>
+        <div className="icon-picker">
+          {ICON_CATEGORIES.map(cat => (
+            <div key={cat.label} className="icon-category">
+              <span className="icon-category-label">{cat.label}</span>
+              <div className="icon-grid">
+                {cat.icons.map(emoji => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    className={`icon-btn${icon === emoji ? ' icon-btn--selected' : ''}`}
+                    onClick={() => handleIconClick(emoji)}
+                    aria-label={emoji}
+                    aria-pressed={icon === emoji}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {errors.limit && <span className="form-error-msg">{errors.limit}</span>}
 

@@ -36,7 +36,10 @@ export default function ManageHabits({ habits, onAdd, onEdit, onDelete }) {
         habits.map(habit => (
           <div key={habit.id} className="manage-habit-item">
             <div className="manage-habit-info">
-              <div className="manage-habit-name">{habit.name}</div>
+              <div className="manage-habit-name">
+              {habit.icon && <span className="manage-habit-icon">{habit.icon} </span>}
+              {habit.name}
+            </div>
               <div className="manage-habit-meta">
                 {habit.type === 'checkbox'
                   ? 'Checkbox'

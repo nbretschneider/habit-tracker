@@ -4,7 +4,8 @@ import { useHabits } from './hooks/useHabits'
 import HabitList from './components/HabitList'
 import ManageHabits from './components/ManageHabits'
 import HabitForm from './components/HabitForm'
-import { getTodayKey } from './utils/dateUtils'
+import HistoryView from './components/HistoryView'
+import { getTodayKey, offsetDateKey } from './utils/dateUtils'
 
 function formatDate(dateKey) {
   const [year, month, day] = dateKey.split('-').map(Number)
@@ -15,7 +16,8 @@ function formatDate(dateKey) {
 export default function App() {
   const [currentView, setCurrentView] = useState('today')
   const [editingHabit, setEditingHabit] = useState(null)
-  const { habits, todayLog, addHabit, updateHabit, deleteHabit, toggleHabit, incrementHabit } = useHabits()
+  const [historyDate, setHistoryDate] = useState(() => offsetDateKey(getTodayKey(), -1))
+  const { habits, todayLog, addHabit, updateHabit, deleteHabit, toggleHabit, incrementHabit, getLogForDate } = useHabits()
 
   function handleEdit(habit) {
     setEditingHabit(habit)
@@ -40,10 +42,17 @@ export default function App() {
     setCurrentView('manage')
   }
 
+  function handleOpenHistory() {
+    setHistoryDate(offsetDateKey(getTodayKey(), -1))
+    setCurrentView('history')
+  }
+
   const headerTitle = currentView === 'today'
     ? 'Habit Tracker'
     : currentView === 'manage'
     ? 'Manage Habits'
+    : currentView === 'history'
+    ? 'History'
     : editingHabit ? 'Edit Habit' : 'Add Habit'
 
   return (
@@ -56,9 +65,14 @@ export default function App() {
           )}
         </div>
         {currentView === 'today' && (
-          <button className="btn btn-ghost" onClick={() => setCurrentView('manage')}>
-            Manage
-          </button>
+          <div className="header-actions">
+            <button className="btn btn-ghost" onClick={handleOpenHistory}>
+              History
+            </button>
+            <button className="btn btn-ghost" onClick={() => setCurrentView('manage')}>
+              Manage
+            </button>
+          </div>
         )}
         {(currentView === 'manage' || currentView === 'form') && (
           <button
@@ -66,6 +80,11 @@ export default function App() {
             onClick={() => currentView === 'manage' ? setCurrentView('today') : handleCancel()}
           >
             {currentView === 'manage' ? '← Today' : 'Cancel'}
+          </button>
+        )}
+        {currentView === 'history' && (
+          <button className="btn btn-ghost" onClick={() => setCurrentView('today')}>
+            ← Today
           </button>
         )}
       </header>
@@ -93,6 +112,14 @@ export default function App() {
             habitCount={habits.length}
             onSave={handleSave}
             onCancel={handleCancel}
+          />
+        )}
+        {currentView === 'history' && (
+          <HistoryView
+            habits={habits}
+            getLogForDate={getLogForDate}
+            historyDate={historyDate}
+            onDateChange={setHistoryDate}
           />
         )}
       </main>

@@ -13,9 +13,28 @@ function loadFromStorage(key, fallback) {
   }
 }
 
+// Migrate old checkbox entries from { done: boolean } to { state: 'pending'|'done'|'missed' }
+function migrateLog(rawLog) {
+  const migrated = {}
+  for (const [dateKey, dayLog] of Object.entries(rawLog)) {
+    const migratedDay = {}
+    for (const [habitId, entry] of Object.entries(dayLog)) {
+      if (entry.type === 'checkbox' && 'done' in entry && !('state' in entry)) {
+        migratedDay[habitId] = { type: 'checkbox', state: entry.done ? 'done' : 'pending' }
+      } else {
+        migratedDay[habitId] = entry
+      }
+    }
+    migrated[dateKey] = migratedDay
+  }
+  return migrated
+}
+
+const CHECKBOX_CYCLE = { pending: 'done', done: 'missed', missed: 'pending' }
+
 export function useHabits() {
   const [habits, setHabits] = useState(() => loadFromStorage(HABITS_KEY, []))
-  const [log, setLog] = useState(() => loadFromStorage(LOG_KEY, {}))
+  const [log, setLog] = useState(() => migrateLog(loadFromStorage(LOG_KEY, {})))
 
   // Persist habits to localStorage whenever they change
   useEffect(() => {
@@ -38,7 +57,7 @@ export function useHabits() {
       habits.forEach(h => {
         if (!updated[h.id]) {
           updated[h.id] = h.type === 'checkbox'
-            ? { type: 'checkbox', done: false }
+            ? { type: 'checkbox', state: 'pending' }
             : { type: 'counter', count: 0, target: h.target, done: false }
           changed = true
         }
@@ -55,12 +74,13 @@ export function useHabits() {
     const today = getTodayKey()
     setLog(prev => {
       const entry = prev[today]?.[id]
-      if (!entry) return prev
+      if (!entry || entry.type !== 'checkbox') return prev
+      const nextState = CHECKBOX_CYCLE[entry.state] || 'done'
       return {
         ...prev,
         [today]: {
           ...prev[today],
-          [id]: { ...entry, done: !entry.done }
+          [id]: { ...entry, state: nextState }
         }
       }
     })
@@ -90,6 +110,7 @@ export function useHabits() {
       name: data.name.trim(),
       type: data.type,
       target: data.type === 'counter' ? Number(data.target) : null,
+      icon: data.icon ?? '',
       order: habits.length,
     }
     setHabits(prev => [...prev, newHabit])
@@ -104,6 +125,7 @@ export function useHabits() {
               name: data.name.trim(),
               type: data.type,
               target: data.type === 'counter' ? Number(data.target) : null,
+              icon: data.icon ?? '',
             }
           : h
       )
@@ -114,6 +136,10 @@ export function useHabits() {
     setHabits(prev => prev.filter(h => h.id !== id))
   }
 
+  function getLogForDate(dateKey) {
+    return log[dateKey] || {}
+  }
+
   return {
     habits,
     todayLog,
@@ -122,5 +148,6 @@ export function useHabits() {
     deleteHabit,
     toggleHabit,
     incrementHabit,
+    getLogForDate,
   }
 }

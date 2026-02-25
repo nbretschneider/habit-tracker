@@ -1,7 +1,7 @@
 import './HabitList.css'
 import HabitCard from './HabitCard'
 
-export default function HabitList({ habits, todayLog, onToggle, onIncrement }) {
+export default function HabitList({ habits, todayLog, onToggle, onIncrement, readOnly }) {
   if (habits.length === 0) {
     return (
       <div className="habit-list-empty">
@@ -14,7 +14,12 @@ export default function HabitList({ habits, todayLog, onToggle, onIncrement }) {
     )
   }
 
-  const doneCount = habits.filter(h => todayLog[h.id]?.done).length
+  const doneCount = habits.filter(h => {
+    const entry = todayLog[h.id]
+    if (!entry) return false
+    if (entry.type === 'checkbox') return entry.state === 'done'
+    return entry.done
+  }).length
   const allDone = doneCount === habits.length
 
   return (
@@ -31,6 +36,7 @@ export default function HabitList({ habits, todayLog, onToggle, onIncrement }) {
           logEntry={todayLog[habit.id]}
           onToggle={onToggle}
           onIncrement={onIncrement}
+          readOnly={readOnly}
         />
       ))}
     </div>
