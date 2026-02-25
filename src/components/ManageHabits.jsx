@@ -43,7 +43,7 @@ export default function ManageHabits({ habits, onAdd, onEdit, onDelete, onSignOu
               <div className="manage-habit-meta">
                 {habit.type === 'checkbox'
                   ? 'Checkbox'
-                  : `Counter · target: ${habit.target}`}
+                  : `Counter${habit.target ? ' · target: ' + habit.target : ''}${habit.unit ? ' ' + habit.unit : ''}`}
               </div>
             </div>
             <div className="manage-habit-actions">

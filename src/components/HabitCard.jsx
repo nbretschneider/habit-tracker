@@ -1,48 +1,54 @@
+import { useState, useEffect } from 'react'
 import './HabitCard.css'
 
-export default function HabitCard({ habit, logEntry, onToggle, onIncrement, readOnly }) {
+export default function HabitCard({ habit, logEntry, onToggle, onSetCount, readOnly }) {
   if (!logEntry) return null
 
   const isCounter = logEntry.type === 'counter'
-  const checkboxState = !isCounter ? (logEntry.state || 'pending') : null
-  const counterDone = isCounter ? logEntry.done : false
-  const isPartial = isCounter && logEntry.count > 0 && !counterDone
+  const state = logEntry.state || 'pending'
+  const [countInput, setCountInput] = useState(String(logEntry.count))
+
+  useEffect(() => {
+    setCountInput(String(logEntry.count))
+  }, [logEntry.count])
 
   let cardClass = 'habit-card'
-  if (isCounter) {
-    if (counterDone) cardClass += ' habit-card--done'
-    else if (isPartial) cardClass += ' habit-card--partial'
-    else cardClass += ' habit-card--pending'
-  } else {
-    if (checkboxState === 'done') cardClass += ' habit-card--done'
-    else if (checkboxState === 'missed') cardClass += ' habit-card--missed'
-    else cardClass += ' habit-card--pending'
-  }
+  if (state === 'done') cardClass += ' habit-card--done'
+  else if (state === 'missed') cardClass += ' habit-card--missed'
+  else cardClass += ' habit-card--pending'
   if (readOnly) cardClass += ' habit-card--readonly'
 
-  const stateIcon = isCounter
-    ? (counterDone ? '✓' : '○')
-    : (checkboxState === 'done' ? '✓' : checkboxState === 'missed' ? '✗' : '○')
+  const stateIcon = state === 'done' ? '✓' : state === 'missed' ? '✗' : '○'
 
   function handleCardClick() {
-    if (readOnly || isCounter) return
+    if (readOnly) return
     onToggle(habit.id)
   }
 
-  function handleIncrementClick(e) {
-    e.stopPropagation()
-    if (readOnly) return
-    onIncrement(habit.id)
+  function handleCountChange(e) {
+    setCountInput(e.target.value)
   }
 
-  const isDone = isCounter ? counterDone : checkboxState === 'done'
+  function handleCountBlur() {
+    const val = parseInt(countInput, 10)
+    const newCount = isNaN(val) || val < 0 ? 0 : val
+    setCountInput(String(newCount))
+    if (newCount !== logEntry.count) onSetCount(habit.id, newCount)
+  }
+
+  function handleCountKeyDown(e) {
+    if (e.key === 'Enter') e.target.blur()
+    e.stopPropagation()
+  }
+
+  const unit = habit.unit ? ' ' + habit.unit : ''
 
   return (
     <div
       className={cardClass}
       onClick={handleCardClick}
-      role={isCounter || readOnly ? undefined : 'checkbox'}
-      aria-checked={isCounter || readOnly ? undefined : isDone}
+      role="checkbox"
+      aria-checked={state === 'done'}
       tabIndex={readOnly ? undefined : 0}
       onKeyDown={e => { if (!readOnly && (e.key === ' ' || e.key === 'Enter')) handleCardClick() }}
     >
@@ -55,18 +61,23 @@ export default function HabitCard({ habit, logEntry, onToggle, onIncrement, read
       </div>
 
       {isCounter && (
-        <div className="habit-card-right">
-          <span className="habit-card-progress">
-            {logEntry.count} / {logEntry.target}
-          </span>
-          <button
-            className="habit-card-increment"
-            onClick={handleIncrementClick}
-            disabled={counterDone || readOnly}
-            aria-label={`Increment ${habit.name}`}
-          >
-            +
-          </button>
+        <div className="habit-card-right" onClick={e => e.stopPropagation()}>
+          <input
+            className="habit-card-count-input"
+            type="number"
+            min={0}
+            value={countInput}
+            onChange={handleCountChange}
+            onBlur={handleCountBlur}
+            onKeyDown={handleCountKeyDown}
+            disabled={readOnly}
+            aria-label={`Count for ${habit.name}`}
+          />
+          {(logEntry.target || habit.unit) && (
+            <span className="habit-card-count-label">
+              {logEntry.target ? `/ ${logEntry.target}${unit}` : unit}
+            </span>
+          )}
         </div>
       )}
     </div>

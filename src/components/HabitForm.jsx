@@ -6,16 +6,17 @@ export default function HabitForm({ initialValues, habitCount, onSave, onCancel 
   const isEditing = !!initialValues
   const [name, setName] = useState(initialValues?.name ?? '')
   const [type, setType] = useState(initialValues?.type ?? 'checkbox')
-  const [target, setTarget] = useState(initialValues?.target ?? 5)
+  const [target, setTarget] = useState(initialValues?.target ?? '')
+  const [unit, setUnit] = useState(initialValues?.unit ?? '')
   const [icon, setIcon] = useState(initialValues?.icon ?? '')
   const [errors, setErrors] = useState({})
 
   function validate() {
     const errs = {}
     if (!name.trim()) errs.name = 'Name is required.'
-    if (type === 'counter') {
+    if (type === 'counter' && target !== '') {
       const t = Number(target)
-      if (!Number.isInteger(t) || t < 2) errs.target = 'Target must be a whole number of 2 or more.'
+      if (!Number.isInteger(t) || t < 1) errs.target = 'Target must be a whole number of 1 or more.'
     }
     if (!isEditing && habitCount >= 10) errs.limit = 'You already have 10 habits (the maximum).'
     return errs
@@ -28,7 +29,7 @@ export default function HabitForm({ initialValues, habitCount, onSave, onCancel 
       setErrors(errs)
       return
     }
-    onSave({ name, type, target: Number(target), icon })
+    onSave({ name, type, target: target === '' ? null : Number(target), unit, icon })
   }
 
   function handleIconClick(emoji) {
@@ -84,18 +85,32 @@ export default function HabitForm({ initialValues, habitCount, onSave, onCancel 
       </div>
 
       {type === 'counter' && (
-        <div className={`form-field${errors.target ? ' form-field-error' : ''}`}>
-          <label htmlFor="habit-target">Target (how many?)</label>
-          <input
-            id="habit-target"
-            type="number"
-            min={2}
-            max={99}
-            value={target}
-            onChange={e => { setTarget(e.target.value); setErrors(p => ({ ...p, target: undefined })) }}
-          />
-          {errors.target && <span className="form-error-msg">{errors.target}</span>}
-        </div>
+        <>
+          <div className={`form-field${errors.target ? ' form-field-error' : ''}`}>
+            <label htmlFor="habit-target">Target <span className="form-label-optional">(optional)</span></label>
+            <input
+              id="habit-target"
+              type="number"
+              min={1}
+              max={9999}
+              placeholder="e.g. 8"
+              value={target}
+              onChange={e => { setTarget(e.target.value); setErrors(p => ({ ...p, target: undefined })) }}
+            />
+            {errors.target && <span className="form-error-msg">{errors.target}</span>}
+          </div>
+          <div className="form-field">
+            <label htmlFor="habit-unit">Unit <span className="form-label-optional">(optional, e.g. glasses, km, pages)</span></label>
+            <input
+              id="habit-unit"
+              type="text"
+              placeholder="e.g. glasses"
+              value={unit}
+              onChange={e => setUnit(e.target.value)}
+              maxLength={20}
+            />
+          </div>
+        </>
       )}
 
       <div className="form-field">

@@ -35,7 +35,7 @@ export function useHabits(userId) {
       if (!logMap[row.date]) logMap[row.date] = {}
       logMap[row.date][row.habit_id] = row.type === 'checkbox'
         ? { type: 'checkbox', state: row.state || 'pending' }
-        : { type: 'counter', count: row.count ?? 0, target: row.target, done: row.done ?? false }
+        : { type: 'counter', count: row.count ?? 0, target: row.target, state: row.state || (row.done ? 'done' : 'pending') }
     })
 
     // Ensure today's entries exist locally for all habits
@@ -45,7 +45,7 @@ export function useHabits(userId) {
       if (!logMap[today][h.id]) {
         logMap[today][h.id] = h.type === 'checkbox'
           ? { type: 'checkbox', state: 'pending' }
-          : { type: 'counter', count: 0, target: h.target, done: false }
+          : { type: 'counter', count: 0, target: h.target, state: 'pending' }
       }
     })
 
@@ -59,37 +59,31 @@ export function useHabits(userId) {
   async function toggleHabit(id) {
     const today = getTodayKey()
     const entry = log[today]?.[id]
-    if (!entry || entry.type !== 'checkbox') return
+    if (!entry) return
 
     const nextState = CHECKBOX_CYCLE[entry.state] || 'done'
 
-    // Optimistic UI update
     setLog(prev => ({
       ...prev,
       [today]: { ...prev[today], [id]: { ...entry, state: nextState } }
     }))
 
-    await supabase.from('habit_log').upsert({
-      user_id: userId,
-      habit_id: id,
-      date: today,
-      type: 'checkbox',
-      state: nextState,
-    }, { onConflict: 'user_id,habit_id,date' })
+    const upsertData = { user_id: userId, habit_id: id, date: today, type: entry.type, state: nextState }
+    if (entry.type === 'counter') {
+      upsertData.count = entry.count
+      upsertData.target = entry.target
+    }
+    await supabase.from('habit_log').upsert(upsertData, { onConflict: 'user_id,habit_id,date' })
   }
 
-  async function incrementHabit(id) {
+  async function setHabitCount(id, newCount) {
     const today = getTodayKey()
     const entry = log[today]?.[id]
     if (!entry || entry.type !== 'counter') return
 
-    const newCount = Math.min(entry.count + 1, entry.target)
-    const done = newCount >= entry.target
-
-    // Optimistic UI update
     setLog(prev => ({
       ...prev,
-      [today]: { ...prev[today], [id]: { ...entry, count: newCount, done } }
+      [today]: { ...prev[today], [id]: { ...entry, count: newCount } }
     }))
 
     await supabase.from('habit_log').upsert({
@@ -98,7 +92,7 @@ export function useHabits(userId) {
       date: today,
       type: 'counter',
       count: newCount,
-      done,
+      state: entry.state,
       target: entry.target,
     }, { onConflict: 'user_id,habit_id,date' })
   }
@@ -109,8 +103,9 @@ export function useHabits(userId) {
       user_id: userId,
       name: data.name.trim(),
       type: data.type,
-      target: data.type === 'counter' ? Number(data.target) : null,
+      target: data.type === 'counter' && data.target ? Number(data.target) : null,
       icon: data.icon ?? '',
+      unit: data.type === 'counter' ? (data.unit ?? '') : '',
     }
 
     const { data: inserted, error } = await supabase.from('habits').insert(newHabit).select().single()
@@ -122,7 +117,7 @@ if (error) return
     const today = getTodayKey()
     const todayEntry = inserted.type === 'checkbox'
       ? { type: 'checkbox', state: 'pending' }
-      : { type: 'counter', count: 0, target: inserted.target, done: false }
+      : { type: 'counter', count: 0, target: inserted.target, state: 'pending' }
     setLog(prev => ({
       ...prev,
       [today]: { ...(prev[today] || {}), [inserted.id]: todayEntry }
@@ -133,8 +128,9 @@ if (error) return
     const updates = {
       name: data.name.trim(),
       type: data.type,
-      target: data.type === 'counter' ? Number(data.target) : null,
+      target: data.type === 'counter' && data.target ? Number(data.target) : null,
       icon: data.icon ?? '',
+      unit: data.type === 'counter' ? (data.unit ?? '') : '',
     }
 
     const { error } = await supabase.from('habits').update(updates).eq('id', id).eq('user_id', userId)
@@ -162,7 +158,7 @@ if (error) return
     updateHabit,
     deleteHabit,
     toggleHabit,
-    incrementHabit,
+    setHabitCount,
     getLogForDate,
   }
 }

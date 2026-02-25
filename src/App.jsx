@@ -21,7 +21,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState('today')
   const [editingHabit, setEditingHabit] = useState(null)
   const [historyDate, setHistoryDate] = useState(() => offsetDateKey(getTodayKey(), -1))
-  const { habits, todayLog, loading, addHabit, updateHabit, deleteHabit, toggleHabit, incrementHabit, getLogForDate } = useHabits(session?.user?.id)
+  const { habits, todayLog, loading, addHabit, updateHabit, deleteHabit, toggleHabit, setHabitCount, getLogForDate } = useHabits(session?.user?.id)
 
   if (authLoading) {
     return (
@@ -121,7 +121,7 @@ export default function App() {
                 habits={habits}
                 todayLog={todayLog}
                 onToggle={toggleHabit}
-                onIncrement={incrementHabit}
+                onSetCount={setHabitCount}
               />
             )}
             {currentView === 'manage' && (
