@@ -1,0 +1,103 @@
+.habit-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 88px;
+  padding: 20px 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.2s;
+  user-select: none;
+  color: var(--color-text-on-color);
+  background: var(--color-not-done);
+}
+
+.habit-card:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-lg);
+}
+
+.habit-card--done {
+  background: var(--color-done);
+}
+
+.habit-card--partial {
+  background: var(--color-partial);
+  cursor: default;
+}
+
+.habit-card--pending {
+  background: var(--color-not-done);
+}
+
+.habit-card-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.habit-card-icon {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+  min-width: 28px;
+  text-align: center;
+}
+
+.habit-card-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.habit-card-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.habit-card-progress {
+  font-size: 1rem;
+  font-weight: 600;
+  opacity: 0.95;
+  white-space: nowrap;
+}
+
+.habit-card-increment {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.1s;
+  line-height: 1;
+  padding: 0;
+}
+
+.habit-card-increment:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.habit-card-increment:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.habit-card-increment:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

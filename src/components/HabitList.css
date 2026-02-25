@@ -1,0 +1,46 @@
+.habit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.habit-list-summary {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  font-weight: 500;
+  padding: 4px 0 8px;
+}
+
+.habit-list-summary.all-done {
+  color: var(--color-done);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.habit-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.habit-list-empty .empty-icon {
+  font-size: 3rem;
+}
+
+.habit-list-empty p {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.habit-list-empty strong {
+  display: block;
+  font-size: 1.1rem;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
