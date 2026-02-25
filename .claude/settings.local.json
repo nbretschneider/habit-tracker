@@ -4,7 +4,9 @@
       "Bash(git init:*)",
       "Bash(git:*)",
       "Bash(cd /c/Users/nbretschneid/Projects/my-first-project && npm install 2>&1)",
-      "Bash(cd /c/Users/nbretschneid/Projects/my-first-project && npm run build 2>&1)"
+      "Bash(cd /c/Users/nbretschneid/Projects/my-first-project && npm run build 2>&1)",
+      "Bash(cd:*)",
+      "Bash(tail:*)"
     ]
   }
 }
