@@ -148,3 +148,17 @@ body {
   flex-direction: column;
   gap: 12px;
 }
+
+.app-loading,
+.habits-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  font-size: 1rem;
+}
+
+.habits-loading {
+  min-height: 200px;
+}

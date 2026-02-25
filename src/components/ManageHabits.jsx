@@ -1,6 +1,6 @@
 import './ManageHabits.css'
 
-export default function ManageHabits({ habits, onAdd, onEdit, onDelete }) {
+export default function ManageHabits({ habits, onAdd, onEdit, onDelete, onSignOut }) {
   const atMax = habits.length >= 10
 
   function handleDelete(habit) {
@@ -63,6 +63,9 @@ export default function ManageHabits({ habits, onAdd, onEdit, onDelete }) {
           </div>
         ))
       )}
+      <button className="btn btn-ghost manage-signout" onClick={onSignOut}>
+        Sign out
+      </button>
     </div>
   )
 }

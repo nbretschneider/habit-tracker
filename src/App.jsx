@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import './App.css'
+import { useAuth } from './hooks/useAuth'
 import { useHabits } from './hooks/useHabits'
+import { supabase } from './lib/supabase'
 import HabitList from './components/HabitList'
 import ManageHabits from './components/ManageHabits'
 import HabitForm from './components/HabitForm'
 import HistoryView from './components/HistoryView'
+import AuthGate from './components/AuthGate'
 import { getTodayKey, offsetDateKey } from './utils/dateUtils'
 
 function formatDate(dateKey) {
@@ -14,10 +17,23 @@ function formatDate(dateKey) {
 }
 
 export default function App() {
+  const { session, authLoading } = useAuth()
   const [currentView, setCurrentView] = useState('today')
   const [editingHabit, setEditingHabit] = useState(null)
   const [historyDate, setHistoryDate] = useState(() => offsetDateKey(getTodayKey(), -1))
-  const { habits, todayLog, addHabit, updateHabit, deleteHabit, toggleHabit, incrementHabit, getLogForDate } = useHabits()
+  const { habits, todayLog, loading, addHabit, updateHabit, deleteHabit, toggleHabit, incrementHabit, getLogForDate } = useHabits(session?.user?.id)
+
+  if (authLoading) {
+    return (
+      <div className="app-loading">
+        <span>Loading…</span>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return <AuthGate />
+  }
 
   function handleEdit(habit) {
     setEditingHabit(habit)
@@ -45,6 +61,10 @@ export default function App() {
   function handleOpenHistory() {
     setHistoryDate(offsetDateKey(getTodayKey(), -1))
     setCurrentView('history')
+  }
+
+  function handleSignOut() {
+    supabase.auth.signOut()
   }
 
   const headerTitle = currentView === 'today'
@@ -90,37 +110,46 @@ export default function App() {
       </header>
 
       <main className="app-content">
-        {currentView === 'today' && (
-          <HabitList
-            habits={habits}
-            todayLog={todayLog}
-            onToggle={toggleHabit}
-            onIncrement={incrementHabit}
-          />
-        )}
-        {currentView === 'manage' && (
-          <ManageHabits
-            habits={habits}
-            onAdd={handleAdd}
-            onEdit={handleEdit}
-            onDelete={deleteHabit}
-          />
-        )}
-        {currentView === 'form' && (
-          <HabitForm
-            initialValues={editingHabit}
-            habitCount={habits.length}
-            onSave={handleSave}
-            onCancel={handleCancel}
-          />
-        )}
-        {currentView === 'history' && (
-          <HistoryView
-            habits={habits}
-            getLogForDate={getLogForDate}
-            historyDate={historyDate}
-            onDateChange={setHistoryDate}
-          />
+        {loading ? (
+          <div className="habits-loading">
+            <span>Loading your habits…</span>
+          </div>
+        ) : (
+          <>
+            {currentView === 'today' && (
+              <HabitList
+                habits={habits}
+                todayLog={todayLog}
+                onToggle={toggleHabit}
+                onIncrement={incrementHabit}
+              />
+            )}
+            {currentView === 'manage' && (
+              <ManageHabits
+                habits={habits}
+                onAdd={handleAdd}
+                onEdit={handleEdit}
+                onDelete={deleteHabit}
+                onSignOut={handleSignOut}
+              />
+            )}
+            {currentView === 'form' && (
+              <HabitForm
+                initialValues={editingHabit}
+                habitCount={habits.length}
+                onSave={handleSave}
+                onCancel={handleCancel}
+              />
+            )}
+            {currentView === 'history' && (
+              <HistoryView
+                habits={habits}
+                getLogForDate={getLogForDate}
+                historyDate={historyDate}
+                onDateChange={setHistoryDate}
+              />
+            )}
+          </>
         )}
       </main>
     </div>

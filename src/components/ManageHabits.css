@@ -73,3 +73,11 @@
   text-align: center;
   padding: 4px 0;
 }
+
+.manage-signout {
+  margin-top: 8px;
+  width: 100%;
+  color: var(--color-muted);
+  border-color: var(--color-border);
+  font-size: 0.85rem;
+}
