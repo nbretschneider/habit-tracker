@@ -106,7 +106,6 @@ export function useHabits(userId) {
   async function addHabit(data) {
     if (habits.length >= 10) return
     const newHabit = {
-      id: 'h_' + Date.now(),
       user_id: userId,
       name: data.name.trim(),
       type: data.type,
@@ -114,19 +113,19 @@ export function useHabits(userId) {
       icon: data.icon ?? '',
     }
 
-    const { error } = await supabase.from('habits').insert(newHabit)
-    if (error) return
+    const { data: inserted, error } = await supabase.from('habits').insert(newHabit).select().single()
+if (error) return
 
-    setHabits(prev => [...prev, newHabit])
+    setHabits(prev => [...prev, inserted])
 
     // Add pending entry for today in local state
     const today = getTodayKey()
-    const todayEntry = newHabit.type === 'checkbox'
+    const todayEntry = inserted.type === 'checkbox'
       ? { type: 'checkbox', state: 'pending' }
-      : { type: 'counter', count: 0, target: newHabit.target, done: false }
+      : { type: 'counter', count: 0, target: inserted.target, done: false }
     setLog(prev => ({
       ...prev,
-      [today]: { ...(prev[today] || {}), [newHabit.id]: todayEntry }
+      [today]: { ...(prev[today] || {}), [inserted.id]: todayEntry }
     }))
   }
 
